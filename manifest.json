@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "UniEmoji",
+  "version": "0.1.0",
+  "description": "让 DeepSeek 和 Gemini 的 emoji 拥有不同的面孔。",
+  "permissions": ["storage"],
+  "action": {"default_popup": "popup/index.html", "default_title": "UniEmoji"},
+  "content_scripts": [{
+    "matches": ["https://chat.deepseek.com/*", "https://gemini.google.com/*"],
+    "js": ["src/catalog.js", "src/engine.js", "src/content.js"],
+    "css": ["src/content.css"],
+    "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{
+    "resources": ["assets/whale/*.png"],
+    "matches": ["https://chat.deepseek.com/*", "https://gemini.google.com/*"]
+  }]
+}

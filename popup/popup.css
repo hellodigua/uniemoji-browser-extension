@@ -1,0 +1,8 @@
+:root {color-scheme: light; font: 13px/1.6 system-ui, sans-serif; color: #28252a; background: #fffafb;}
+* {box-sizing: border-box;} body {width: 310px; margin: 0; padding: 22px;}
+header {display: flex; gap: 12px; align-items: center; margin-bottom: 24px;} .mark {display: grid; place-items: center; background: #ee4567; color: white; width: 38px; height: 38px; border-radius: 11px; font: bold 30px Georgia,serif;}
+h1 {font-size: 20px; margin: 0; letter-spacing: -.7px;} header p {margin: 0; font-size: 10px; color: #706970;}
+.toggle, .size {display: flex; align-items: center; justify-content: space-between; gap: 10px;} .toggle {font-weight: 600;} input {width: 18px; height: 18px; accent-color: #ee4567;}
+.preview {display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 100px; margin: 18px 0; border: 1px solid #eadce1; border-radius: 10px; background: white;} img {object-fit: contain;}
+select {font: inherit; color: inherit; background: white; border: 1px solid #eadce1; padding: 6px; border-radius: 6px;} :focus-visible {outline: 2px solid #ee4567; outline-offset: 3px;}
+#status {min-height: 20px; font-size: 11px; color: #706970;} footer {border-top: 1px solid #eadce1; padding-top: 14px; color: #706970; font-size: 11px;}

@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>UniEmoji renderer regression</title>
+<link rel="stylesheet" href="../src/content.css">
+<style>body{font:20px/1.8 sans-serif;padding:32px}button{margin:5px}#scroller{position:relative;height:260px;overflow:auto;border:1px solid #aaa;width:600px}p{margin:24px}#status{white-space:pre-wrap;font-size:14px}</style>
+<h1>UniEmoji 渲染回归</h1>
+<button id="append">appendData 追加</button><button id="concat">data += 追加</button><button id="replace">完整覆写</button><button id="toggle">开关</button><button id="scroll">滚动</button><button id="sync">验证同步滚动</button><button id="narrow">切换宽度</button><button id="select">检查选择文本</button>
+<div id="scroller"><article style="position:relative;transform:translateY(12px)"><div class="ds-assistant-message-main-content"><p id="reply">你好😊，第一段，加油💪！</p><p>第二行😂，未知🦋，组合🙂‍↕️。</p><code>代码😊不替换</code><div style="height:220px"></div><p>末尾😊</p></div></article></div>
+<pre id="status"></pre>
+<script src="../src/catalog.js"></script><script src="../src/engine.js"></script>
+<script>
+let onSettings, enabled=true;
+window.chrome={runtime:{getURL:file=>'../'+file},storage:{local:{get:async()=>({settings:{enabled:true,size:32}})},onChanged:{addListener:fn=>onSettings=fn}}};
+UniEmoji.selectorFor=()=>'.ds-assistant-message-main-content';
+const source=document.querySelector('#reply').firstChild;
+function report(){document.querySelector('#status').textContent=JSON.stringify({text:source.data,identity:source===document.querySelector('#reply').firstChild,children:document.querySelector('#reply').childNodes.length},null,2)}
+document.querySelector('#append').onclick=()=>{source.appendData('，追加😊');report()};
+document.querySelector('#concat').onclick=()=>{source.data+='，继续💪';report()};
+document.querySelector('#replace').onclick=()=>{source.data='全新回复😂，尾部完整😊';report()};
+document.querySelector('#toggle').onclick=()=>{enabled=!enabled;onSettings({settings:{newValue:{enabled,size:32}}},'local');report()};
+document.querySelector('#scroll').onclick=()=>{document.querySelector('#scroller').scrollTop+=100};
+document.querySelector('#sync').onclick=()=>{
+ const scroller=document.querySelector('#scroller');
+ const image=document.querySelector('[data-uniemoji]');
+ const range=document.createRange();range.setStart(source,2);range.setEnd(source,4);
+ const textBefore=range.getBoundingClientRect().top, imageBefore=image.getBoundingClientRect().top;
+ scroller.scrollTop+=80;
+ // Measure synchronously, before any scroll event or animation-frame callback.
+ const textDy=range.getBoundingClientRect().top-textBefore;
+ const imageDy=image.getBoundingClientRect().top-imageBefore;
+ document.querySelector('#status').textContent=JSON.stringify({textDy,imageDy,synchronized:Math.abs(textDy-imageDy)<0.1},null,2);
+};
+document.querySelector('#narrow').onclick=()=>{document.querySelector('#scroller').style.width='300px'};
+document.querySelector('#select').onclick=()=>{const range=document.createRange();range.selectNodeContents(document.querySelector('#reply'));getSelection().removeAllRanges();getSelection().addRange(range);document.querySelector('#status').textContent='选择文本：'+getSelection().toString()};
+report();
+</script><script src="../src/content.js"></script>

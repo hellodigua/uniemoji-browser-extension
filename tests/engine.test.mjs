@@ -8,7 +8,7 @@ const engine = readFileSync(new URL('../src/engine.js', import.meta.url),'utf8')
 function setup(html) {
  const dom = new JSDOM(html, {runScripts:'outside-only'});
  mockBrowser(dom.window);
- dom.window.eval(catalog); dom.window.eval(engine);
+ dom.window.eval(catalog); dom.window.eval(readFileSync(new URL('../src/sizing.js', import.meta.url),'utf8')); dom.window.eval(engine);
  const api=dom.window.UniEmoji;
  const renderer=api.createRenderer(dom.window.document, file=>`chrome-extension://test/assets/whale/${file}`);
  return {dom,document:dom.window.document,api,renderer};
@@ -284,4 +284,45 @@ test('清理部分待加载记录不取消同素材其他记录的就绪回调',
  assert.equal(document.querySelectorAll('[data-uniemoji]:not([hidden])').length,2);
  assert.equal(dom.window.CSS.highlights.get('uniemoji-replaced').size,2);
  renderer.restore();
+});
+
+test('豆包只匹配 assistant 的正文，不替换用户、思考和代码区域', () => {
+ const {document,api,renderer}=setup(`
+  <div data-message-role="user"><div data-testid="message_text_content">用户😊</div></div>
+  <div data-message-role="assistant">
+   <div data-testid="message_thinking_content">思考😊</div>
+   <div data-testid="message_text_content"><p>你好😊</p><ul><li>加油💪</li></ul><code>😊</code><pre>😂</pre><a href="#">😊</a><span>🦋👨‍👩‍👧‍👦</span></div>
+  </div><div contenteditable="true">输入😊</div>`);
+ const before=document.body.textContent;
+ const roots=[...document.querySelectorAll(api.selectorFor('www.doubao.com'))];
+ assert.equal(roots.length,1);
+ renderer.render(roots);
+ assert.equal(document.querySelectorAll('[data-uniemoji]').length,2);
+ assert.equal(document.body.textContent,before);
+ renderer.restore();
+ assert.equal(document.querySelectorAll('[data-uniemoji]').length,0);
+});
+
+test('ChatGPT 新版正文标识只匹配助手消息，保护用户和代码', () => {
+ const {document,api,renderer}=setup(`
+  <div data-user-message-bubble="true">用户😊</div>
+  <div data-markdown-text-style="user-message">用户 Markdown😊</div>
+  <div data-markdown-text-style="assistant-message"><p>你好😊</p><ul><li>加油💪</li></ul><code>😊</code><pre>😂</pre><a href="#">😊</a><span>🦋👨‍👩‍👧‍👦</span></div>
+  <div contenteditable="true">输入😊</div>`);
+ const before=document.body.textContent;
+ const roots=[...document.querySelectorAll(api.selectorFor('chatgpt.com'))];
+ assert.equal(roots.length,1);
+ renderer.render(roots);
+ assert.equal(document.querySelectorAll('[data-uniemoji]').length,2);
+ assert.equal(document.body.textContent,before);
+ renderer.restore();
+ assert.equal(document.querySelectorAll('[data-uniemoji]').length,0);
+});
+
+
+test('尺寸默认 24px，接受 24–64px 的每个 4px 档位并拒绝其他值',()=>{
+ const {api}=setup('<p>😊</p>');
+ assert.equal(api.normalizeSettings().size,24);
+ for(let size=24;size<=64;size+=4) assert.equal(api.normalizeSettings({size}).size,size);
+ for(const size of [0,20,25,42,65,68,32.5,'32',null]) assert.equal(api.normalizeSettings({size}).size,24);
 });

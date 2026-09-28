@@ -1,7 +1,53 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>UniEmoji</title><link rel="stylesheet" href="popup.css"></head>
-<body><header><span class="mark">u.</span><div><h1>UniEmoji</h1><p>Same meanings, any face.</p></div></header>
-<main><label class="toggle">让表情更有表情<input id="enabled" type="checkbox" role="switch" disabled></label>
-<section class="preview" aria-label="效果预览"><span>今天也要加油</span><img id="preview" src="../assets/whale/ds_35.png" width="32" height="32" alt="加油"></section>
-<label class="size">尺寸上限<select id="size" disabled><option value="24">小 · 24px</option><option value="32">标准 · 32px</option><option value="40">大 · 40px</option></select></label>
-<p id="status" role="status">正在加载设置…</p></main><footer>支持 DeepSeek · Gemini 网页版<br>仅替换已有 emoji，聊天内容留在本地。</footer><script src="popup.js"></script></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniEmoji 设置</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="brand">
+    <h1>UniEmoji</h1><p>Same meanings, any face.</p>
+  </header>
+  <main>
+    <label class="toggle" for="enabled">
+      <span><span class="setting-title">启用表情替换</span><span class="setting-hint">让 AI 的回复更有表情</span></span>
+      <span class="switch"><input id="enabled" type="checkbox" role="switch" disabled><span class="switch-track" aria-hidden="true"></span></span>
+    </label>
+    <section class="preview" aria-label="回复预览">
+      <div class="preview-heading"><span>回复预览</span></div>
+      <div class="bubble"><span>早上好</span><span class="emoji-slot"><img id="preview" src="../assets/whale/ds_01.png" width="24" height="24" alt="开心"><span id="original" hidden>😊</span></span></div>
+    </section>
+    <fieldset id="size" disabled>
+      <legend>表情尺寸</legend>
+      <div class="size-options">
+        <div class="size-track">
+          <span class="size-indicator" aria-hidden="true" hidden></span>
+        <label><input type="radio" name="size" value="24" checked aria-label="24 像素"><span class="size-option">24px</span></label>
+        <label><input type="radio" name="size" value="28" aria-label="28 像素"><span class="size-option">28px</span></label>
+        <label><input type="radio" name="size" value="32" aria-label="32 像素"><span class="size-option">32px</span></label>
+        <label><input type="radio" name="size" value="36" aria-label="36 像素"><span class="size-option">36px</span></label>
+        <label><input type="radio" name="size" value="40" aria-label="40 像素"><span class="size-option">40px</span></label>
+        <label><input type="radio" name="size" value="44" aria-label="44 像素"><span class="size-option">44px</span></label>
+        <label><input type="radio" name="size" value="48" aria-label="48 像素"><span class="size-option">48px</span></label>
+        <label><input type="radio" name="size" value="52" aria-label="52 像素"><span class="size-option">52px</span></label>
+        <label><input type="radio" name="size" value="56" aria-label="56 像素"><span class="size-option">56px</span></label>
+        <label><input type="radio" name="size" value="60" aria-label="60 像素"><span class="size-option">60px</span></label>
+        <label><input type="radio" name="size" value="64" aria-label="64 像素"><span class="size-option">64px</span></label>
+        </div>
+      </div>
+    </fieldset>
+  </main>
+  <footer>
+    <details class="help">
+      <summary>使用说明</summary>
+      <ol class="help-content">
+        <li>支持 DeepSeek、Gemini、ChatGPT 和豆包网页版。</li>
+        <li>仅本地处理，聊天内容不上传。</li>
+      </ol>
+    </details>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
   const assetURL = file => chrome.runtime.getURL(`assets/whale/${file}`);
   let settings = api.normalizeSettings();
   let disposed = false;
-  const observe = () => observer.observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'contenteditable', 'style', 'hidden']});
+  const observe = () => observer.observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'contenteditable', 'style', 'hidden', 'data-message-role', 'data-testid', 'data-markdown-text-style']});
   // MutationObserver runs at the microtask checkpoint, before the next paint.
   // A timeout lets the host's raw emoji be painted between streaming chunks.
   const observer = new MutationObserver(refreshChanges);

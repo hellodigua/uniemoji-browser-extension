@@ -4,6 +4,8 @@
   const selectors = {
     'chat.deepseek.com': '.ds-assistant-message-main-content',
     'gemini.google.com': 'model-response-content message-content .markdown',
+    'chatgpt.com': '[data-markdown-text-style="assistant-message"]',
+    'www.doubao.com': '[data-message-role="assistant"] [data-testid="message_text_content"]',
   };
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
   const byEmoji = new Map(api.catalog.map(item => [item.emoji, item]));
@@ -12,7 +14,7 @@
   api.selectorFor = host => selectors[host] || null;
   api.normalizeSettings = (value = {}) => ({
     enabled: value.enabled !== false,
-    size: [24, 32, 40].includes(value.size) ? value.size : 32,
+    size: Number.isInteger(value.size) && value.size >= 24 && value.size <= 64 && value.size % 4 === 0 ? value.size : 24,
   });
   // Share load results across replies; a failed image leaves the glyph visible.
   const imageCaches = new WeakMap();
@@ -54,6 +56,7 @@
       view.CSS.highlights.set('uniemoji-replaced', highlight);
     }
     const records = new Map();
+    const sizing = api.createSizing(document, reposition);
     const layers = new Map();
     // One readiness listener per renderer/asset, shared by all its glyphs.
     // Count users so clearing one text record cannot unsubscribe the others.
@@ -103,7 +106,7 @@
         layers.delete(layer.anchor);
       }
     }
-    let size = 32;
+    let size = 24;
     function clear(record) {
       for (const {range, image, asset} of record.entries) {
         releaseAsset(asset);
@@ -115,16 +118,19 @@
     }
     function restore() {
       for (const record of records.values()) clear(record);
+      sizing.restore();
     }
     function reposition() {
+      const anchors = new Map();
       for (const record of records.values()) {
-        const parent = record.node.parentElement;
-        if (!record.node.isConnected || record.node.data !== record.text || parent?.closest(excluded)) {
-          clear(record);
-          continue;
-        }
-        const anchor = findAnchor(record.node);
-        if (!anchor) { clear(record); continue; }
+        const anchor = record.node.isConnected && record.node.data === record.text &&
+          !record.node.parentElement?.closest(excluded) && findAnchor(record.node);
+        if (anchor) anchors.set(record, anchor);
+        else clear(record);
+      }
+      sizing.update(records.values(), size);
+      for (const record of records.values()) {
+        const anchor = anchors.get(record);
         if (record.layer.anchor !== anchor) {
           const previous = record.layer;
           record.layer = acquireLayer(anchor);
@@ -143,7 +149,7 @@
           if (!rect || !rect.width || !rect.height) continue;
           if (!origin.width || !origin.height) continue;
           const width = rect.width / origin.width, height = rect.height / origin.height;
-          const side = Math.min(size, width, height);
+          const side = sizing.has(record.node, range.toString()) ? Math.min(size, width) : Math.min(size, width, height);
           image.style.left = `${(rect.left - origin.left) / origin.width + (width - side) / 2}px`;
           image.style.top = `${(rect.top - origin.top) / origin.height + (height - side) / 2}px`;
           image.style.width = `${side}px`;
@@ -153,7 +159,7 @@
         }
       }
     }
-    function render(roots, requestedSize = 32) {
+    function render(roots, requestedSize = 24) {
       size = requestedSize;
       for (const record of records.values()) {
         if (!record.node.isConnected || !roots.some(root => root.contains(record.node)) || record.node.parentElement?.closest(excluded) || record.node.data !== record.text) clear(record);
@@ -189,6 +195,7 @@
           if (entries.length) records.set(node, {node, text: node.data, entries, layer});
         }
       }
+      sizing.update(records.values(), size, true);
       reposition();
     }
     return {render, restore, reposition};

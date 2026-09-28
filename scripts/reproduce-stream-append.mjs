@@ -13,7 +13,7 @@ for (const [name, write] of [
 ]) {
   const dom = new JSDOM('<p>你好😊，第一段</p>', {runScripts:'outside-only'});
   mockBrowser(dom.window);
-  for (const file of ['catalog.js', 'engine.js']) {
+  for (const file of ['catalog.js', 'sizing.js', 'engine.js']) {
     dom.window.eval(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'));
   }
   const root = dom.window.document.querySelector('p');

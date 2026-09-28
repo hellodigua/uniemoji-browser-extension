@@ -42,7 +42,7 @@ async function setup(t, host, markup, initialSettings = {enabled: true, size: 32
   };
   const scans = [];
   const positions = [];
-  for (const file of ['catalog.js', 'engine.js', 'content.js']) {
+  for (const file of ['catalog.js', 'sizing.js', 'engine.js', 'content.js']) {
     if (file === 'content.js') {
       const createRenderer = window.UniEmoji.createRenderer;
       window.UniEmoji.createRenderer = (...args) => {
@@ -63,6 +63,8 @@ async function setup(t, host, markup, initialSettings = {enabled: true, size: 32
 for (const [host, markup, selector] of [
   ['chat.deepseek.com', '<div class="ds-assistant-message-main-content"><p>开始😊</p></div>', '.ds-assistant-message-main-content'],
   ['gemini.google.com', '<model-response-content><message-content><div class="markdown"><p>开始😊</p></div></message-content></model-response-content>', '.markdown'],
+  ['chatgpt.com', '<div data-markdown-text-style="assistant-message"><p>开始😊</p></div>', '[data-markdown-text-style="assistant-message"]'],
+  ['www.doubao.com', '<div data-message-role="assistant"><div data-testid="message_text_content"><p>开始😊</p></div></div>', '[data-testid="message_text_content"]'],
 ]) {
   test(`${host} 流式覆写和重绘在微任务结束前替换，无延时闪回`, async t => {
     const {window, setSettings} = await setup(t, host, markup);
@@ -99,11 +101,14 @@ for (const [host, markup, selector] of [
   });
 }
 
-for (const host of ['chat.deepseek.com', 'gemini.google.com']) {
+for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com']) {
   test(`${host} 只扫描变动回复，支持新增、移除和祖先属性变化`, async t => {
-    const wrap = text => host === 'chat.deepseek.com'
-      ? `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`
-      : `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`;
+    const wrap = text => ({
+      'chat.deepseek.com': `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`,
+      'gemini.google.com': `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`,
+      'chatgpt.com': `<div data-markdown-text-style="assistant-message"><p>${text}</p></div>`,
+      'www.doubao.com': `<div data-message-role="assistant"><div data-testid="message_text_content"><p>${text}</p></div></div>`,
+    })[host];
     const markup = `<aside>侧栏</aside><main>${Array.from({length:50}, (_, i) => wrap(`历史${i}😊`)).join('')}</main>`;
     const {window, scans} = await setup(t, host, markup);
     const document = window.document;
@@ -161,11 +166,14 @@ test('宿主单独移除覆盖层后，观察器恢复图片且不改写正文',
  assert.equal(source.data,'你好😊');
 });
 
-for (const host of ['chat.deepseek.com', 'gemini.google.com']) {
+for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com']) {
   test(`${host} 流式更新不重定位历史回复，共享布局变化仍全量重定位`, async t => {
-    const wrap = text => host === 'chat.deepseek.com'
-      ? `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`
-      : `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`;
+    const wrap = text => ({
+      'chat.deepseek.com': `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`,
+      'gemini.google.com': `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`,
+      'chatgpt.com': `<div data-markdown-text-style="assistant-message"><p>${text}</p></div>`,
+      'www.doubao.com': `<div data-message-role="assistant"><div data-testid="message_text_content"><p>${text}</p></div></div>`,
+    })[host];
     const {window, scans, positions, notifyResize} = await setup(t, host,
       `<main>${Array.from({length: 50}, (_, i) => wrap(`历史${i}😊`)).join('')}</main>`);
     const frame = () => new Promise(resolve => window.requestAnimationFrame(resolve));
@@ -267,3 +275,20 @@ test('初始化失败清理字体监听，迟到的 ready 不调度布局', asyn
   assert.equal(scheduled, 0);
   assert.equal(positions.length, 0);
 });
+
+for (const [host, markup, attribute, initial, changed] of [
+  ['chatgpt.com', '<div data-markdown-text-style="assistant-message"><p>正文😊</p></div>', 'data-markdown-text-style', 'assistant-message', 'user-message'],
+  ['www.doubao.com', '<div data-message-role="assistant"><div data-testid="message_text_content"><p>正文😊</p></div></div>', 'data-message-role', 'assistant', 'user'],
+]) {
+  test(`${host} 消息角色改变时恢复原文，恢复助手角色后重新匹配`, async t => {
+    const {window} = await setup(t, host, markup);
+    const owner = window.document.querySelector(`[${attribute}]`);
+    owner.setAttribute(attribute, changed);
+    await new Promise(resolve => queueMicrotask(resolve));
+    assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 0);
+    assert.equal(owner.textContent, '正文😊');
+    owner.setAttribute(attribute, initial);
+    await new Promise(resolve => queueMicrotask(resolve));
+    assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 1);
+  });
+}

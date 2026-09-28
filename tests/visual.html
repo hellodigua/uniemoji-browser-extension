@@ -3,19 +3,20 @@
 <style>body{font:20px/1.8 sans-serif;padding:32px}button{margin:5px}#scroller{position:relative;height:260px;overflow:auto;border:1px solid #aaa;width:600px}p{margin:24px}#status{white-space:pre-wrap;font-size:14px}</style>
 <h1>UniEmoji 渲染回归</h1>
 <button id="append">appendData 追加</button><button id="concat">data += 追加</button><button id="replace">完整覆写</button><button id="toggle">开关</button><button id="scroll">滚动</button><button id="sync">验证同步滚动</button><button id="narrow">切换宽度</button><button id="select">检查选择文本</button>
+<label>表情尺寸 <select id="size"><option selected>24</option><option>28</option><option>32</option><option>36</option><option>40</option><option>44</option><option>48</option><option>52</option><option>56</option><option>60</option><option>64</option></select></label><button id="size-test">运行尺寸回归</button>
 <div id="scroller"><article style="position:relative;transform:translateY(12px)"><div class="ds-assistant-message-main-content"><p id="reply">你好😊，第一段，加油💪！</p><p>第二行😂，未知🦋，组合🙂‍↕️。</p><code>代码😊不替换</code><div style="height:220px"></div><p>末尾😊</p></div></article></div>
 <pre id="status"></pre>
-<script src="../src/catalog.js"></script><script src="../src/engine.js"></script>
+<script src="../src/catalog.js"></script><script src="../src/sizing.js"></script><script src="../src/engine.js"></script>
 <script>
-let onSettings, enabled=true;
-window.chrome={runtime:{getURL:file=>'../'+file},storage:{local:{get:async()=>({settings:{enabled:true,size:32}})},onChanged:{addListener:fn=>onSettings=fn}}};
+let onSettings, enabled=true, size=24;
+window.chrome={runtime:{getURL:file=>'../'+file},storage:{local:{get:async()=>({settings:{enabled:true,size:24}})},onChanged:{addListener:fn=>onSettings=fn}}};
 UniEmoji.selectorFor=()=>'.ds-assistant-message-main-content';
 const source=document.querySelector('#reply').firstChild;
 function report(){document.querySelector('#status').textContent=JSON.stringify({text:source.data,identity:source===document.querySelector('#reply').firstChild,children:document.querySelector('#reply').childNodes.length},null,2)}
 document.querySelector('#append').onclick=()=>{source.appendData('，追加😊');report()};
 document.querySelector('#concat').onclick=()=>{source.data+='，继续💪';report()};
 document.querySelector('#replace').onclick=()=>{source.data='全新回复😂，尾部完整😊';report()};
-document.querySelector('#toggle').onclick=()=>{enabled=!enabled;onSettings({settings:{newValue:{enabled,size:32}}},'local');report()};
+document.querySelector('#toggle').onclick=()=>{enabled=!enabled;onSettings({settings:{newValue:{enabled,size}}},'local');report()};
 document.querySelector('#scroll').onclick=()=>{document.querySelector('#scroller').scrollTop+=100};
 document.querySelector('#sync').onclick=()=>{
  const scroller=document.querySelector('#scroller');
@@ -30,5 +31,20 @@ document.querySelector('#sync').onclick=()=>{
 };
 document.querySelector('#narrow').onclick=()=>{document.querySelector('#scroller').style.width='300px'};
 document.querySelector('#select').onclick=()=>{const range=document.createRange();range.selectNodeContents(document.querySelector('#reply'));getSelection().removeAllRanges();getSelection().addRange(range);document.querySelector('#status').textContent='选择文本：'+getSelection().toString()};
+document.querySelector('#size').onchange=event=>{size=Number(event.target.value);onSettings({settings:{newValue:{enabled,size}}},'local');report()};
+document.querySelector('#size-test').onclick=async()=>{
+ const result=[];
+ const frame=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ for(const selected of Array.from({length:11}, (_, index) => 24 + index * 4)) {
+  size=selected;document.querySelector('#size').value=String(size);
+  onSettings({settings:{newValue:{enabled:true,size}}},'local');
+  await document.fonts.ready;await frame();
+  const image=document.querySelector('[data-uniemoji]');
+  const range=document.createRange();range.setStart(source,2);range.setEnd(source,4);
+  const glyph=range.getBoundingClientRect(),picture=image.getBoundingClientRect();
+  result.push({size,width:picture.width,glyphWidth:glyph.width,textFont:getComputedStyle(source.parentElement).fontSize,identity:source===document.querySelector('#reply').firstChild,pass:Math.abs(picture.width-size)<0.1&&glyph.width>=size-0.1});
+ }
+ document.querySelector('#status').textContent=JSON.stringify(result,null,2);
+};
 report();
 </script><script src="../src/content.js"></script>

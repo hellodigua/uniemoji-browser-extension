@@ -55,6 +55,22 @@
     }
     const records = new Map();
     const layers = new Map();
+    // One readiness listener per renderer/asset, shared by all its glyphs.
+    // Count users so clearing one text record cannot unsubscribe the others.
+    const assetUsers = new Map();
+    function retainAsset(asset) {
+      const users = assetUsers.get(asset) || 0;
+      if (!users && asset.state === 'loading') asset.listeners.add(reposition);
+      assetUsers.set(asset, users + 1);
+    }
+    function releaseAsset(asset) {
+      const users = assetUsers.get(asset) - 1;
+      if (users) assetUsers.set(asset, users);
+      else {
+        assetUsers.delete(asset);
+        asset.listeners.delete(reposition);
+      }
+    }
     function findAnchor(node) {
       for (let element = node.parentElement; element; element = element.parentElement) {
         const style = view.getComputedStyle(element);
@@ -89,8 +105,8 @@
     }
     let size = 32;
     function clear(record) {
-      for (const {range, image, asset, onReady} of record.entries) {
-        asset.listeners.delete(onReady);
+      for (const {range, image, asset} of record.entries) {
+        releaseAsset(asset);
         highlight.delete(range);
         image.remove();
       }
@@ -163,13 +179,12 @@
             image.hidden = true;
             const url = assetURL(item.file);
             const asset = getAsset(document, url);
-            const onReady = () => reposition();
-            if (asset.state === 'loading') asset.listeners.add(onReady);
+            retainAsset(asset);
             image.style.backgroundImage = `url("${url}")`;
             // Decoration-only children: the host Text node stays in place.
             layer ||= acquireLayer(anchor);
             layer.element.append(image);
-            entries.push({range, image, asset, onReady});
+            entries.push({range, image, asset});
           }
           if (entries.length) records.set(node, {node, text: node.data, entries, layer});
         }

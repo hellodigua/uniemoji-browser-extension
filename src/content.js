@@ -11,8 +11,6 @@
   // MutationObserver runs at the microtask checkpoint, before the next paint.
   // A timeout lets the host's raw emoji be painted between streaming chunks.
   const observer = new MutationObserver(refreshChanges);
-  // Rendering uses these same load results; warming alone is not readiness.
-  api.preloadImages(document, assetURL);
   let layoutFrame = 0;
   function repositionAll() {
     cancelAnimationFrame(layoutFrame);
@@ -115,8 +113,11 @@
     for (const renderer of renderers.values()) renderer.restore();
     renderers.clear();
     resizeObserver.disconnect();
-    if (settings.enabled) update(new Set(document.querySelectorAll(selector)));
-    else observe();
+    if (settings.enabled) {
+      // Warm the shared cache only after settings permit rendering.
+      api.preloadImages(document, assetURL);
+      update(new Set(document.querySelectorAll(selector)));
+    } else observe();
   }
   function dispose() {
     disposed = true;

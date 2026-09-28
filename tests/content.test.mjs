@@ -4,10 +4,16 @@ import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import {mockBrowser} from './browser-mocks.mjs';
 
-async function setup(t, host, markup) {
+async function setup(t, host, markup, initialSettings = {enabled: true, size: 32}) {
   const dom = new JSDOM(markup, {url: `https://${host}/`, runScripts: 'outside-only', pretendToBeVisual:true});
   const {window} = dom;
   mockBrowser(window);
+  const imageLoads = [];
+  window.Image = class {
+    complete = true;
+    naturalWidth = 128;
+    set src(url) { imageLoads.push(url); }
+  };
   let resizeCallback;
   window.ResizeObserver = class {
     constructor(callback) { resizeCallback = callback; }
@@ -26,7 +32,7 @@ async function setup(t, host, markup) {
   window.chrome = {
     runtime: {getURL: file => `chrome-extension://test/${file}`},
     storage: {
-      local: {get: async () => ({settings: {enabled: true, size: 32}})},
+      local: {get: async () => ({settings: initialSettings})},
       onChanged: {addListener: callback => { onSettings = callback; }},
     },
   };
@@ -47,7 +53,7 @@ async function setup(t, host, markup) {
     window.eval(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'));
   }
   await new Promise(resolve => queueMicrotask(resolve));
-  return {window, scans, positions, notifyResize: () => resizeCallback([]), setSettings: settings => onSettings({settings: {newValue: settings}}, 'local')};
+  return {window, scans, positions, imageLoads, notifyResize: () => resizeCallback([]), setSettings: settings => onSettings({settings: {newValue: settings}}, 'local')};
 }
 
 for (const [host, markup, selector] of [
@@ -201,3 +207,21 @@ for (const host of ['chat.deepseek.com', 'gemini.google.com']) {
     assert.equal(positions.length, 50);
   });
 }
+
+test('关闭时不预加载，启用后加载素材且切换设置复用缓存', async t => {
+  const {window, imageLoads, setSettings} = await setup(t, 'chat.deepseek.com',
+    '<div class="ds-assistant-message-main-content"><p>你好😊</p></div>', {enabled: false});
+  assert.equal(imageLoads.length, 0);
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 0);
+  setSettings({enabled: false, size: 40});
+  assert.equal(imageLoads.length, 0);
+  setSettings({enabled: true, size: 32});
+  assert.equal(imageLoads.length, 40);
+  assert.equal(new Set(imageLoads).size, 40);
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]:not([hidden])').length, 1);
+  setSettings({enabled: false});
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 0);
+  setSettings({enabled: true, size: 40});
+  assert.equal(imageLoads.length, 40);
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]:not([hidden])').length, 1);
+});

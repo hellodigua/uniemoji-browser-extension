@@ -256,3 +256,32 @@ test('覆盖层被宿主重绘移除后可重建，关闭时清理整个层',()=
  assert.equal(document.querySelector('[data-uniemoji-layer]'),null);
  assert.equal(root.textContent,'你好😊');
 });
+
+test('同一素材就绪时，每个 renderer 只测量一次全部表情', () => {
+ const {dom,document,api,renderer}=setup(`<p>${'😊'.repeat(50)}</p><p>${'😊'.repeat(10)}</p>`);
+ const images=pendingImages(dom.window);
+ const roots=[...document.querySelectorAll('p')];
+ const second=api.createRenderer(document,file=>`chrome-extension://test/assets/whale/${file}`);
+ renderer.render([roots[0]]);second.render([roots[1]]);
+ assert.equal(images.length,1);
+ let reads=0;
+ const getRects=dom.window.Range.prototype.getClientRects;
+ dom.window.Range.prototype.getClientRects=function(){reads++;return getRects.call(this)};
+ images[0].succeed();
+ assert.equal(reads,60);
+ assert.equal(document.querySelectorAll('[data-uniemoji]:not([hidden])').length,60);
+ renderer.restore();second.restore();
+});
+
+test('清理部分待加载记录不取消同素材其他记录的就绪回调', () => {
+ const {dom,document,renderer}=setup('<section><p>移除😊</p><p>保留😊😊</p></section>');
+ const images=pendingImages(dom.window);
+ const root=document.querySelector('section');
+ renderer.render([root]);
+ root.querySelector('p').remove();
+ renderer.render([root]);
+ images[0].succeed();
+ assert.equal(document.querySelectorAll('[data-uniemoji]:not([hidden])').length,2);
+ assert.equal(dom.window.CSS.highlights.get('uniemoji-replaced').size,2);
+ renderer.restore();
+});

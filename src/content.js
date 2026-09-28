@@ -27,6 +27,11 @@
   const resizeObserver = new ResizeObserver(repositionAll);
   window.addEventListener('resize', scheduleLayout);
   document.addEventListener('load', scheduleLayout, true);
+  // Font swaps can move glyphs without changing a reply's measured size.
+  // ready covers the initial font load; loadingdone covers later font loads.
+  const fonts = document.fonts;
+  fonts?.ready.then(scheduleLayout);
+  fonts?.addEventListener('loadingdone', scheduleLayout);
   function collect(node, roots) {
     const element = node.nodeType === 1 ? node : node.parentElement;
     if (!element?.isConnected) return;
@@ -124,6 +129,7 @@
     cancelAnimationFrame(layoutFrame);
     window.removeEventListener('resize', scheduleLayout);
     document.removeEventListener('load', scheduleLayout, true);
+    fonts?.removeEventListener('loadingdone', scheduleLayout);
     observer.disconnect();
     for (const renderer of renderers.values()) renderer.restore();
     renderers.clear();

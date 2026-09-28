@@ -4,10 +4,14 @@ import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import {mockBrowser} from './browser-mocks.mjs';
 
-async function setup(t, host, markup, initialSettings = {enabled: true, size: 32}) {
+async function setup(t, host, markup, initialSettings = {enabled: true, size: 32}, storageFails = false) {
   const dom = new JSDOM(markup, {url: `https://${host}/`, runScripts: 'outside-only', pretendToBeVisual:true});
   const {window} = dom;
   mockBrowser(window);
+  const fonts = new window.EventTarget();
+  let finishFonts;
+  fonts.ready = new Promise(resolve => { finishFonts = resolve; });
+  Object.defineProperty(window.document, 'fonts', {value: fonts});
   const imageLoads = [];
   window.Image = class {
     complete = true;
@@ -32,7 +36,7 @@ async function setup(t, host, markup, initialSettings = {enabled: true, size: 32
   window.chrome = {
     runtime: {getURL: file => `chrome-extension://test/${file}`},
     storage: {
-      local: {get: async () => ({settings: initialSettings})},
+      local: {get: async () => { if (storageFails) throw new Error("storage unavailable"); return {settings: initialSettings}; }},
       onChanged: {addListener: callback => { onSettings = callback; }},
     },
   };
@@ -53,7 +57,7 @@ async function setup(t, host, markup, initialSettings = {enabled: true, size: 32
     window.eval(readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'));
   }
   await new Promise(resolve => queueMicrotask(resolve));
-  return {window, scans, positions, imageLoads, notifyResize: () => resizeCallback([]), setSettings: settings => onSettings({settings: {newValue: settings}}, 'local')};
+  return {window, scans, positions, imageLoads, fonts, finishFonts, notifyResize: () => resizeCallback([]), setSettings: settings => onSettings({settings: {newValue: settings}}, 'local')};
 }
 
 for (const [host, markup, selector] of [
@@ -224,4 +228,42 @@ test('关闭时不预加载，启用后加载素材且切换设置复用缓存',
   setSettings({enabled: true, size: 40});
   assert.equal(imageLoads.length, 40);
   assert.equal(window.document.querySelectorAll('[data-uniemoji]:not([hidden])').length, 1);
+});
+
+test('字体初次及后续加载完成后重新定位，合并事件且关闭后不定位', async t => {
+  const {window, positions, scans, fonts, finishFonts, setSettings} = await setup(t,
+    'chat.deepseek.com', '<div class="ds-assistant-message-main-content"><p>字体😊</p></div>');
+  const frame = () => new Promise(resolve => window.requestAnimationFrame(resolve));
+  scans.length = 0;
+  finishFonts();
+  fonts.dispatchEvent(new window.Event('loadingdone'));
+  await frame();
+  assert.equal(positions.length, 1);
+  assert.equal(scans.length, 0);
+  fonts.dispatchEvent(new window.Event('loadingdone'));
+  await frame();
+  assert.equal(positions.length, 2);
+  setSettings({enabled: false});
+  fonts.dispatchEvent(new window.Event('loadingdone'));
+  await frame();
+  assert.equal(positions.length, 2);
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 0);
+  setSettings({enabled: true});
+  fonts.dispatchEvent(new window.Event('loadingdone'));
+  await frame();
+  assert.equal(positions.length, 3);
+});
+
+test('初始化失败清理字体监听，迟到的 ready 不调度布局', async t => {
+  const {window, fonts, finishFonts, positions} = await setup(t,
+    'chat.deepseek.com', '<div class="ds-assistant-message-main-content"><p>字体😊</p></div>', {}, true);
+  await new Promise(resolve => queueMicrotask(resolve));
+  let scheduled = 0;
+  const requestFrame = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = callback => { scheduled++; return requestFrame(callback); };
+  finishFonts();
+  fonts.dispatchEvent(new window.Event('loadingdone'));
+  await new Promise(resolve => queueMicrotask(resolve));
+  assert.equal(scheduled, 0);
+  assert.equal(positions.length, 0);
 });

@@ -65,6 +65,9 @@ for (const [host, markup, selector] of [
   ['gemini.google.com', '<model-response-content><message-content><div class="markdown"><p>开始😊</p></div></message-content></model-response-content>', '.markdown'],
   ['chatgpt.com', '<div data-markdown-text-style="assistant-message"><p>开始😊</p></div>', '[data-markdown-text-style="assistant-message"]'],
   ['www.doubao.com', '<div data-message-role="assistant"><div data-testid="message_text_content"><p>开始😊</p></div></div>', '[data-testid="message_text_content"]'],
+  ['www.kimi.com', '<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>开始😊</p></div></div></div>', '.markdown'],
+  ['kimi.com', '<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>开始😊</p></div></div></div>', '.markdown'],
+  ['www.qianwen.com', '<div class="chat-answers-card-wrap"><div class="answer-common-card"><div class="markdown-pc-special-class"><div class="qk-markdown"><p>开始😊</p></div></div></div></div>', '.qk-markdown'],
 ]) {
   test(`${host} 流式覆写和重绘在微任务结束前替换，无延时闪回`, async t => {
     const {window, setSettings} = await setup(t, host, markup);
@@ -101,13 +104,16 @@ for (const [host, markup, selector] of [
   });
 }
 
-for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com']) {
+for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com', 'www.kimi.com', 'kimi.com', 'www.qianwen.com']) {
   test(`${host} 只扫描变动回复，支持新增、移除和祖先属性变化`, async t => {
     const wrap = text => ({
       'chat.deepseek.com': `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`,
       'gemini.google.com': `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`,
       'chatgpt.com': `<div data-markdown-text-style="assistant-message"><p>${text}</p></div>`,
       'www.doubao.com': `<div data-message-role="assistant"><div data-testid="message_text_content"><p>${text}</p></div></div>`,
+      'www.kimi.com': `<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>${text}</p></div></div></div>`,
+      'kimi.com': `<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>${text}</p></div></div></div>`,
+      'www.qianwen.com': `<div class="chat-answers-card-wrap"><div class="answer-common-card"><div class="markdown-pc-special-class"><div class="qk-markdown"><p>${text}</p></div></div></div></div>`,
     })[host];
     const markup = `<aside>侧栏</aside><main>${Array.from({length:50}, (_, i) => wrap(`历史${i}😊`)).join('')}</main>`;
     const {window, scans} = await setup(t, host, markup);
@@ -166,13 +172,16 @@ test('宿主单独移除覆盖层后，观察器恢复图片且不改写正文',
  assert.equal(source.data,'你好😊');
 });
 
-for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com']) {
+for (const host of ['chat.deepseek.com', 'gemini.google.com', 'chatgpt.com', 'www.doubao.com', 'www.kimi.com', 'kimi.com', 'www.qianwen.com']) {
   test(`${host} 流式更新不重定位历史回复，共享布局变化仍全量重定位`, async t => {
     const wrap = text => ({
       'chat.deepseek.com': `<div class="ds-assistant-message-main-content"><p>${text}</p></div>`,
       'gemini.google.com': `<model-response-content><message-content><div class="markdown"><p>${text}</p></div></message-content></model-response-content>`,
       'chatgpt.com': `<div data-markdown-text-style="assistant-message"><p>${text}</p></div>`,
       'www.doubao.com': `<div data-message-role="assistant"><div data-testid="message_text_content"><p>${text}</p></div></div>`,
+      'www.kimi.com': `<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>${text}</p></div></div></div>`,
+      'kimi.com': `<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>${text}</p></div></div></div>`,
+      'www.qianwen.com': `<div class="chat-answers-card-wrap"><div class="answer-common-card"><div class="markdown-pc-special-class"><div class="qk-markdown"><p>${text}</p></div></div></div></div>`,
     })[host];
     const {window, scans, positions, notifyResize} = await setup(t, host,
       `<main>${Array.from({length: 50}, (_, i) => wrap(`历史${i}😊`)).join('')}</main>`);
@@ -279,6 +288,8 @@ test('初始化失败清理字体监听，迟到的 ready 不调度布局', asyn
 for (const [host, markup, attribute, initial, changed] of [
   ['chatgpt.com', '<div data-markdown-text-style="assistant-message"><p>正文😊</p></div>', 'data-markdown-text-style', 'assistant-message', 'user-message'],
   ['www.doubao.com', '<div data-message-role="assistant"><div data-testid="message_text_content"><p>正文😊</p></div></div>', 'data-message-role', 'assistant', 'user'],
+  ['www.kimi.com', '<div class="segment-assistant"><div class="markdown-container"><div class="markdown"><p>正文😊</p></div></div></div>', 'class', 'segment-assistant', 'segment-user'],
+  ['www.qianwen.com', '<div class="chat-answers-card-wrap"><div class="answer-common-card"><div class="markdown-pc-special-class"><div class="qk-markdown"><p>正文😊</p></div></div></div></div>', 'class', 'chat-answers-card-wrap', 'chat-question-card-wrap'],
 ]) {
   test(`${host} 消息角色改变时恢复原文，恢复助手角色后重新匹配`, async t => {
     const {window} = await setup(t, host, markup);

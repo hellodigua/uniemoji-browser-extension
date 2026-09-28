@@ -320,6 +320,52 @@ test('ChatGPT 新版正文标识只匹配助手消息，保护用户和代码', 
 });
 
 
+test('Kimi 只处理助手最终正文，跳过用户、思考、工具、代码和链接',()=>{
+ const {document,api,renderer}=setup(`
+  <div class="segment-user"><div class="markdown-container"><div class="markdown">用户😊</div></div></div>
+  <div class="segment-assistant">
+   <div class="toolcall-container thinking-container"><div class="markdown-container toolcall-content-text"><div class="markdown">思考😊</div></div></div>
+   <div class="toolcall-container"><div class="markdown-container"><div class="markdown">工具😊</div></div></div>
+   <div class="markdown-container"><div class="markdown"><div class="paragraph">你好😊</div><ul><li>加油💪</li></ul><code>😊</code><pre>😂</pre><a href="#">😊</a><span>🦋👨‍👩‍👧‍👦</span></div></div>
+  </div><div contenteditable="true">输入😊</div>`);
+ const before=document.body.textContent;
+ for(const host of ['www.kimi.com','kimi.com']) {
+  const roots=[...document.querySelectorAll(api.selectorFor(host))];
+  assert.equal(roots.length,1);
+  renderer.render(roots);
+  assert.equal(document.querySelectorAll('[data-uniemoji]').length,2);
+  assert.equal(document.body.textContent,before);
+  for(const size of [24,28,32,36,40,44]) {
+   renderer.render(roots,size);
+   assert.equal(document.querySelector('[data-uniemoji]').style.width,`${size}px`);
+  }
+  renderer.restore();
+  assert.equal(document.querySelectorAll('[data-uniemoji]').length,0);
+ }
+});
+
+test('千问国内站只匹配回答正文，保护问题、旁栏、代码和链接',()=>{
+ const {document,api,renderer}=setup(`
+  <div class="chat-question-card-wrap"><div class="question-text-card">用户😊</div></div>
+  <aside><div class="qk-markdown">侧栏😊</div></aside>
+  <div class="chat-answers-card-wrap">
+   <div class="answer-common-card"><div class="markdown-pc-special-class"><div class="qk-markdown"><div class="qk-md-paragraph"><span class="qk-md-text">你好😊，加油💪</span><code class="qk-md-code">😊</code></div><pre><code>😂</code></pre><a href="#">😊</a><span>🦋👨‍👩‍👧‍👦</span></div></div></div>
+   <div class="other-card"><div class="qk-markdown">非正文😊</div></div>
+  </div><div contenteditable="true">输入😊</div>`);
+ const before=document.body.textContent;
+ const roots=[...document.querySelectorAll(api.selectorFor('www.qianwen.com'))];
+ assert.equal(roots.length,1);
+ for(const size of [24,28,32,36,40,44,48,52,56,60,64]) {
+  renderer.render(roots,size);
+  assert.equal(document.querySelectorAll('[data-uniemoji]').length,2);
+  assert.equal(document.querySelector('[data-uniemoji]').style.width,`${Math.min(size,48)}px`);
+  assert.equal(document.body.textContent,before);
+ }
+ assert.equal(api.selectorFor('chat.qwen.ai'),null);
+ renderer.restore();
+ assert.equal(document.querySelectorAll('[data-uniemoji]').length,0);
+});
+
 test('尺寸默认 24px，接受 24–64px 的每个 4px 档位并拒绝其他值',()=>{
  const {api}=setup('<p>😊</p>');
  assert.equal(api.normalizeSettings().size,24);

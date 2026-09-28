@@ -5,7 +5,7 @@ const manifest = JSON.parse(readFileSync(new URL('../manifest.json', import.meta
 const root = new URL('../', import.meta.url);
 for (const entry of manifest.content_scripts) for (const file of [...entry.js, ...entry.css]) assert.ok(existsSync(new URL(file, root)), file);
 assert.deepEqual(manifest.permissions, ['storage']);
-const sites = ['https://chat.deepseek.com/*', 'https://gemini.google.com/*', 'https://chatgpt.com/*', 'https://www.doubao.com/chat/*'];
+const sites = ['https://chat.deepseek.com/*', 'https://gemini.google.com/*', 'https://chatgpt.com/*', 'https://www.doubao.com/chat/*', 'https://www.kimi.com/*', 'https://kimi.com/*', 'https://www.qianwen.com/*'];
 assert.deepEqual([...manifest.content_scripts[0].matches].sort(), [...sites].sort());
 // Chrome permits only /* paths for web-accessible resource match patterns.
 const resourceSites = sites.map(site => `${new URL(site).origin}/*`);

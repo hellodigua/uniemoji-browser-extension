@@ -6,6 +6,9 @@
     'gemini.google.com': 'model-response-content message-content .markdown',
     'chatgpt.com': '[data-markdown-text-style="assistant-message"]',
     'www.doubao.com': '[data-message-role="assistant"] [data-testid="message_text_content"]',
+    'www.kimi.com': '.segment-assistant .markdown-container:not(.toolcall-content-text) > .markdown:not(.toolcall-container .markdown)',
+    'kimi.com': '.segment-assistant .markdown-container:not(.toolcall-content-text) > .markdown:not(.toolcall-container .markdown)',
+    'www.qianwen.com': '.chat-answers-card-wrap .answer-common-card > .markdown-pc-special-class > .qk-markdown',
   };
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
   const byEmoji = new Map(api.catalog.map(item => [item.emoji, item]));

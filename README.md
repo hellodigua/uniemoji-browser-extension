@@ -22,6 +22,8 @@
 | Gemini | [gemini.google.com](https://gemini.google.com/) |
 | ChatGPT | [chatgpt.com](https://chatgpt.com/) |
 | 豆包 | [doubao.com/chat](https://www.doubao.com/chat/) |
+| 千问 | [qianwen.com](https://www.qianwen.com/) |
+| Kimi | [kimi.com](https://www.kimi.com/) |
 
 适用于 Chrome、Edge 的网页版聊天，不适用于这些平台的独立桌面 App 或手机 App。
 

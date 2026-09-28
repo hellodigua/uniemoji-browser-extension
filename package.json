@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "UniEmoji for DeepSeek, Gemini, ChatGPT and Doubao web chats",
+  "description": "UniEmoji for DeepSeek, Gemini, ChatGPT, Doubao, Qianwen and Kimi web chats",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "check": "node scripts/check.mjs"

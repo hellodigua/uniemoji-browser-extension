@@ -1,50 +1,67 @@
 # UniEmoji Browser Extension
 
-让 DeepSeek、Gemini、ChatGPT 和豆包 的 emoji 拥有不同的面孔。
+**Same meanings, any face.**
 
-UniEmoji 的浏览器扩展实现。将 AI 回复中已有的 emoji 显示为鲸鱼表情，支持开关与尺寸调节。仅在本地处理页面，不上传聊天、不修改提示词、不额外调用模型。
+让 AI 回复中的 emoji 变成生动的表情包。UniEmoji 浏览器扩展会把支持的 emoji 显示为鲸鱼表情，让同一种表达拥有不同的面孔。
 
-## 安装开发版
+早上好 😊 → 早上好 <img src="assets/whale/ds_01.png" width="32" height="32" alt="开心的鲸鱼表情" align="absmiddle">
 
-1. 在 Chrome 或 Edge 的扩展管理页开启「开发者模式」。
-2. 点击「加载已解压的扩展程序」，选择本仓库根目录（含 `manifest.json`）。
-3. 刷新已打开的 DeepSeek / Gemini / ChatGPT / 豆包 页面。
-4. 点击扩展图标，可切换开关和表情尺寸。
+## 能做什么
 
-无构建步骤，无运行时依赖。当前支持 `chat.deepseek.com`、`gemini.google.com`、`chatgpt.com` 与 `www.doubao.com/chat/`；不支持独立桌面 App、手机 App、嵌入式页面或其他域名。
+- **自动替换**：支持的 AI 回复中，已有的 emoji 会显示为对应表情；没有对应素材的 emoji 保持原样。
+- **随时调整**：一键开关，表情尺寸可在 24–64px 之间选择，默认 24px。
+- **本地处理**：不上传聊天内容，不修改提示词，不额外调用 AI。
 
-## 当前状态
+目前内置 40 款鲸鱼表情，仅处理 AI 回复正文，用户消息、代码和链接保持原样。
 
-第一版开发原型。四站正文选择器已在实际页面检查；DOM 测试覆盖流式 Text 节点更新、整体重绘、历史内容、重复处理、关闭恢复、代码保护和组合 emoji。维护者已安装并反馈基本功能测试通过；尚未形成覆盖所有站点交互的完整回归记录，当前未发布扩展商店。
+## 支持的网站
 
-- 只替换模型回复正文。代码、链接、输入框、用户消息保持原样。
-- 支持 40 个规范 emoji，以及 `😄`、`🙂` 两个别名；未知 emoji 保留原样。
-- 不修改、拆分或移动宿主 Text 节点。通过 CSS Custom Highlight 隐去对应字形，并在原位置覆盖图片；追加和整段覆写都保留原始文本。不支持此 API 时保持原 emoji。
-- 覆盖图挂在正文滚动边界内已有的定位容器，随正文自然滚动；滚动不触发 JS 追帧。找不到安全容器时保留原 emoji，不修改宿主定位样式。
-- 支持 24–64px 实际尺寸，每档相差 4px，默认 24px。通过本机 emoji 字体为原字形预留宽度，并调整含表情段落的行距，正文文字大小不变；关闭后恢复原排版。
-- 本机字体或字体缩放 API 不可用时，安全回退到原 emoji 占位大小。未收录组合与已收录表情共享码点时，该段落的相关表情保留原占位，避免破坏组合字形。
-- 选择文本保留原 emoji；各站自带复制按钮和富文本复制仍需在实站验证。
-- 开关和大小保存到 `chrome.storage.local`，对已打开的页面生效。
-- 网页结构改版可能导致停止匹配；此时保留原内容，不对全页面进行兜底替换。
+| 平台 | 网页地址 |
+| --- | --- |
+| DeepSeek | [chat.deepseek.com](https://chat.deepseek.com/) |
+| Gemini | [gemini.google.com](https://gemini.google.com/) |
+| ChatGPT | [chatgpt.com](https://chatgpt.com/) |
+| 豆包 | [doubao.com/chat](https://www.doubao.com/chat/) |
 
-## 开发
+适用于 Chrome、Edge 的网页版聊天，不适用于这些平台的独立桌面 App 或手机 App。
 
-Node.js 18+：
+## 安装
 
-```sh
-npm install
-npm test
-npm run check
-```
+目前通过本地加载安装，尚未上架扩展商店。
 
-追加更新回归可单独运行 `node scripts/reproduce-stream-append.mjs`；修复后三种更新方式应全部通过。
+1. 在本仓库页面点击 **Code → Download ZIP**，下载后解压。
+2. 打开浏览器的扩展管理页：Chrome 为 `chrome://extensions`，Edge 为 `edge://extensions`。
+3. 开启「开发者模式」，点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的文件夹。
+4. **刷新已经打开的聊天网页**，让扩展开始生效。
 
-浏览器回归：在仓库根目录运行 `python3 -m http.server 4187 --bind 127.0.0.1`，打开 `http://127.0.0.1:4187/tests/visual.html`。此页面加载生产脚本，以模拟设置接口验证追加、覆写、开关、选择文本及滚动/换行定位（同步滚动按钮在同一操作中对比文字和图片的位移）；不等同于真实网站的扩展端到端验证。已在 Chrome 本地页面检查这些交互。DOM 自动测试显式模拟布局和高亮 API，不验证浏览器绘制。
+安装使用无需运行构建或安装 Node.js。请保留解压后的文件夹，浏览器会从这里加载扩展。
 
-`src/sizing.js` 负责原字形尺寸及行距，`src/engine.js` 是共享视觉覆盖逻辑及站点选择器；`src/content.js` 负责变化监听和扩展设置；`src/catalog.js` 记录语义及素材映射。扩展不保存对话内容。
+## 使用
 
-采用 Manifest V3，仅申请 `storage` 权限，内容脚本仅匹配四个指定网站。后续接入更多网站时单独验证消息角色和正文区域。
+打开支持的聊天网站，AI 回复中出现已收录的 emoji 时，就会自动显示为鲸鱼表情。
+
+点击浏览器工具栏中的 UniEmoji 图标，可以开关替换、预览效果和调整尺寸。设置自动保存；尺寸按钮支持横向滚动。找不到图标时，可在浏览器的扩展菜单中将 UniEmoji 固定到工具栏。
+
+## 常见问题
+
+**为什么有些表情没有变化？**
+
+目前只替换已收录的 emoji。AI 回复没有 emoji，或该 emoji 尚无对应素材时，内容会保持原样。扩展不会主动让 AI 添加表情。
+
+**重新加载扩展后，为什么还是旧效果？**
+
+重新加载扩展后，还需要刷新已打开的聊天网页。平时切换开关和尺寸无需刷新。
+
+**为什么个别表情没有变成指定大小？**
+
+部分字体环境或组合表情会限制可用尺寸，此时会保留原占位大小，避免破坏文字排版。
+
+遇到其他问题，可以在 [Issues](https://github.com/hellodigua/uniemoji-browser-extension/issues) 中反馈使用的网站、浏览器和复现步骤；截图请遮去私人聊天内容。
+
+## 相关项目与贡献
+
+本扩展是 [UniEmoji](https://github.com/hellodigua/UniEmoji) 的浏览器实现。欢迎提交问题和改进，开发与测试方式见 [开发指南](docs/DEVELOPMENT.md)。
 
 ## 许可与素材
 
-原创代码采用 MIT；语义及图片目录参考 dsh-emoji。表情图片不属于 MIT 授权范围，来源与边界见 [ASSETS.md](ASSETS.md)。
+原创代码采用 MIT。内置表情图片不属于 MIT 授权范围，来源与使用边界见 [素材说明](ASSETS.md)。

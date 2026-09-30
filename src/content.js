@@ -4,10 +4,23 @@
   if (!selector) return;
   // Each reply owns its renderer so updating one reply cannot restore others.
   const renderers = new Map();
-  const assetURL = file => chrome.runtime.getURL(`assets/whale/${file}`);
+  let assetBase;
+  try {
+    assetBase = chrome.runtime.getURL('assets/whale/');
+  } catch {
+    // A stale content script cannot reconnect to a reloaded extension.
+    return;
+  }
+  const assetURL = file => `${assetBase}${file}`;
   let settings = api.normalizeSettings();
   let disposed = false;
-  const observe = () => observer.observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'contenteditable', 'style', 'hidden', 'data-message-role', 'data-testid', 'data-markdown-text-style']});
+  function active() {
+    if (disposed) return false;
+    if (chrome.runtime?.id) return true;
+    dispose();
+    return false;
+  }
+  const observe = () => !disposed && observer.observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'contenteditable', 'style', 'hidden', 'data-message-role', 'data-testid', 'data-markdown-text-style']});
   // MutationObserver runs at the microtask checkpoint, before the next paint.
   // A timeout lets the host's raw emoji be painted between streaming chunks.
   const observer = new MutationObserver(refreshChanges);
@@ -15,11 +28,11 @@
   function repositionAll() {
     cancelAnimationFrame(layoutFrame);
     layoutFrame = 0;
-    if (disposed || !settings.enabled) return;
+    if (!active() || !settings.enabled) return;
     for (const renderer of renderers.values()) renderer.reposition();
   }
   function scheduleLayout() {
-    if (disposed || layoutFrame || !settings.enabled) return;
+    if (!active() || layoutFrame || !settings.enabled) return;
     layoutFrame = requestAnimationFrame(repositionAll);
   }
   // ResizeObserver runs after layout, before paint. Do not defer a size change
@@ -42,7 +55,7 @@
     }
   }
   function update(roots) {
-    if (disposed) return;
+    if (!active()) return;
     observer.disconnect();
     try {
       for (const root of roots) {
@@ -60,7 +73,7 @@
     }
   }
   function refreshChanges(mutations) {
-    if (disposed || !settings.enabled) return;
+    if (!active() || !settings.enabled) return;
     // Async image loads and layout callbacks touch only our decorations.
     // Ignore those mutations instead of feeding them back into rendering.
     mutations = mutations.filter(mutation => {
@@ -113,7 +126,7 @@
     }
   }
   function refresh() {
-    if (disposed) return;
+    if (!active()) return;
     observer.disconnect();
     for (const renderer of renderers.values()) renderer.restore();
     renderers.clear();
@@ -125,6 +138,7 @@
     } else observe();
   }
   function dispose() {
+    if (disposed) return;
     disposed = true;
     cancelAnimationFrame(layoutFrame);
     window.removeEventListener('resize', scheduleLayout);
@@ -134,16 +148,25 @@
     for (const renderer of renderers.values()) renderer.restore();
     renderers.clear();
     resizeObserver.disconnect();
+    // The event API itself can already be invalid after an extension reload.
+    try { chrome.storage.onChanged.removeListener(onSettings); } catch {}
   }
-  // No network access, transcript storage, prompt injection or clipboard writes.
-  chrome.storage.local.get('settings').then(result => {
-    settings = api.normalizeSettings(result.settings);
-    refresh();
-  }).catch(dispose);
-  chrome.storage.onChanged.addListener((changes, area) => {
+  function onSettings(changes, area) {
+    if (!active()) return;
     if (area === 'local' && changes.settings) {
       settings = api.normalizeSettings(changes.settings.newValue);
       refresh();
     }
-  });
+  }
+  // No network access, transcript storage, prompt injection or clipboard writes.
+  try {
+    chrome.storage.onChanged.addListener(onSettings);
+    chrome.storage.local.get('settings').then(result => {
+      if (!active()) return;
+      settings = api.normalizeSettings(result.settings);
+      refresh();
+    }).catch(dispose);
+  } catch {
+    dispose();
+  }
 })();

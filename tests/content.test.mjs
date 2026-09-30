@@ -4,6 +4,50 @@ import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import {mockBrowser} from './browser-mocks.mjs';
 
+for (const trigger of ['stream', 'resize', 'settings', 'fonts']) {
+  test(`扩展上下文失效后 ${trigger} 停止旧脚本并保留原文`, async t => {
+    const {window, scans, positions, notifyResize, setSettings, fonts, finishFonts} = await setup(t,
+      'gemini.google.com', '<model-response-content><message-content><div class="markdown"><p>你好😊</p></div></message-content></model-response-content>');
+    assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 1);
+    const text = window.document.querySelector('p').firstChild;
+    const errors = [];
+    window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
+    let removed = 0;
+    window.chrome.storage.onChanged.removeListener = () => { removed++; throw new Error('Extension context invalidated.'); };
+    window.chrome.runtime.id = undefined;
+    window.chrome.runtime.getURL = () => { throw new Error('Extension context invalidated.'); };
+    scans.length = 0;
+    positions.length = 0;
+    if (trigger === 'stream') text.appendData('继续😂');
+    if (trigger === 'resize') notifyResize();
+    if (trigger === 'settings') setSettings({enabled: true, size: 40});
+    if (trigger === 'fonts') fonts.dispatchEvent(new window.Event('loadingdone'));
+    await new Promise(resolve => queueMicrotask(resolve));
+    assert.equal(window.document.querySelectorAll('[data-uniemoji-layer]').length, 0);
+    assert.equal(text.data, trigger === 'stream' ? '你好😊继续😂' : '你好😊');
+    assert.equal(removed, 1);
+    text.appendData('后来😊');
+    finishFonts();
+    notifyResize();
+    setSettings({enabled: true, size: 28});
+    window.dispatchEvent(new window.Event('resize'));
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
+    assert.equal(scans.length, 0);
+    assert.equal(positions.length, 0);
+    assert.equal(errors.length, 0);
+    assert.equal(removed, 1);
+  });
+}
+
+test('资源地址只在初始化获取，后续渲染不调用 getURL', async t => {
+  const {window} = await setup(t, 'chat.deepseek.com',
+    '<div class="ds-assistant-message-main-content"><p>你好😊</p></div>');
+  window.chrome.runtime.getURL = () => { throw new Error('unexpected getURL'); };
+  window.document.querySelector('p').firstChild.appendData('继续😂');
+  await new Promise(resolve => queueMicrotask(resolve));
+  assert.equal(window.document.querySelectorAll('[data-uniemoji]').length, 2);
+});
+
 async function setup(t, host, markup, initialSettings = {enabled: true, size: 32}, storageFails = false) {
   const dom = new JSDOM(markup, {url: `https://${host}/`, runScripts: 'outside-only', pretendToBeVisual:true});
   const {window} = dom;
@@ -34,10 +78,10 @@ async function setup(t, host, markup, initialSettings = {enabled: true, size: 32
   });
   let onSettings;
   window.chrome = {
-    runtime: {getURL: file => `chrome-extension://test/${file}`},
+    runtime: {id: 'test', getURL: file => `chrome-extension://test/${file}`},
     storage: {
       local: {get: async () => { if (storageFails) throw new Error("storage unavailable"); return {settings: initialSettings}; }},
-      onChanged: {addListener: callback => { onSettings = callback; }},
+      onChanged: {addListener: callback => { onSettings = callback; }, removeListener() {}},
     },
   };
   const scans = [];

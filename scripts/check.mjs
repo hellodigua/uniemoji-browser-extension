@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 const manifest = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url)));
 const root = new URL('../', import.meta.url);
+for (const icons of [manifest.icons, manifest.action.default_icon]) {
+  for (const size of [16, 32, 48, 128]) {
+    const png = readFileSync(new URL(icons[size], root));
+    assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+    assert.equal(png.readUInt32BE(16), size, `Icon width: ${size}`);
+    assert.equal(png.readUInt32BE(20), size, `Icon height: ${size}`);
+  }
+}
 for (const entry of manifest.content_scripts) for (const file of [...entry.js, ...entry.css]) assert.ok(existsSync(new URL(file, root)), file);
 assert.deepEqual(manifest.permissions, ['storage']);
 const sites = ['https://chat.deepseek.com/*', 'https://gemini.google.com/*', 'https://chatgpt.com/*', 'https://www.doubao.com/chat/*', 'https://www.kimi.com/*', 'https://kimi.com/*', 'https://www.qianwen.com/*'];
@@ -17,4 +25,4 @@ for (const entry of manifest.web_accessible_resources) {
 }
 assert.equal(readdirSync(new URL('assets/whale/', root)).filter(f=>f.endsWith('.png')).length,40);
 for (const file of ['src/catalog.js','src/sizing.js','src/engine.js','src/content.js','popup/popup.js']) new vm.Script(readFileSync(new URL(file,root),'utf8'));
-console.log('Manifest、脚本语法及 40 张素材检查通过');
+console.log('Manifest、图标尺寸、脚本语法及 40 张素材检查通过');

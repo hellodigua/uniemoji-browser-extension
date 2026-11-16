@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>UniEmoji 商店截图预览</title>
+<link rel="stylesheet" href="../../src/content.css">
+<style>
+*{box-sizing:border-box}body{margin:0;width:1280px;height:800px;overflow:hidden;background:#fff7f9;color:#30262b;font-family:"Avenir Next","PingFang SC",sans-serif}.frame{padding:60px 80px}header{display:flex;align-items:center;justify-content:space-between;font-size:20px;font-weight:700}header span{font-weight:400;font-size:15px;color:#78656e}h1{font-size:48px;letter-spacing:-1px;line-height:1.3;margin:48px 0 16px}h1 em{font-style:normal;color:#ee4567}.subtitle{color:#78656e;font-size:20px;margin:0 0 36px}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:24px}.card{background:white;border:1px solid #efdee5;border-radius:16px;padding:30px;position:relative;min-height:260px}.label{font-size:14px;color:#92717f;margin-bottom:24px}.reply{font-size:23px;line-height:2.1;position:relative}.reply p{margin:12px 0}.card.after{border-color:#f5b6c4}.foot{font-size:16px;color:#78656e;margin-top:38px}.settings{display:none;align-items:center;justify-content:space-between;gap:80px;margin-top:62px}.settings h1{margin-top:0}.settings ul{font-size:20px;line-height:2.3;padding-left:24px;color:#78656e}iframe{width:354px;height:382px;border:1px solid #eedee5;border-radius:12px;background:#fff;box-shadow:0 18px 50px #72334510;flex-shrink:0}body.settings-view .example{display:none}body.settings-view .settings{display:flex}
+</style>
+<div class="frame"><header>UniEmoji<span>Same meanings, any face.</span></header>
+<section class="example"><h1>让 AI 的回复，<em>更有表情。</em></h1><p class="subtitle">同一句话，换上生动的鲸鱼表情。</p><div class="comparison"><div class="card"><div class="label">原始 emoji</div><div class="reply"><p>早上好 😊</p><p>一起加油，你可以的 💪</p><p>完成啦，给你鼓掌 👏</p></div></div><div class="card after"><div class="label">开启 UniEmoji</div><div id="rendered" class="reply"><p>早上好 😊</p><p>一起加油，你可以的 💪</p><p>完成啦，给你鼓掌 👏</p></div></div></div><p class="foot">功能演示 · 示例对话，使用扩展实际渲染代码<br>自动替换表情 · 自由调整尺寸 · 仅在本地处理</p></section>
+<section class="settings"><div><h1>表情大小，<br><em>由你决定。</em></h1><p class="subtitle">打开工具栏，随时调整。</p><ul><li>24–64px，自由选择</li><li>一键开启或关闭</li><li>设置保存在本地</li></ul><p class="foot">实际设置界面 · 示例预览</p></div><iframe title="UniEmoji 实际设置界面" id="popup"></iframe></section></div>
+<script src="../../src/catalog.js"></script><script src="../../src/sizing.js"></script><script src="../../src/engine.js"></script>
+<script>
+// 使用生产渲染器展示公开示例文本，不模拟第三方平台或真实用户对话。
+const assets = file => new URL('../../assets/whale/'+file,location.href).href;
+const renderer = UniEmoji.createRenderer(document,assets);
+UniEmoji.preloadImages(document,assets);
+renderer.render([document.querySelector('#rendered')],32);
+document.fonts.ready.then(()=>renderer.reposition());
+if(new URLSearchParams(location.search).has('settings')) document.body.classList.add('settings-view');
+// 只为截图预览提供内存存储接口，弹窗 HTML、CSS、JS 均复用实际扩展文件。
+async function loadPopup(){
+ const response=await fetch('../../popup/index.html');
+ if(!response.ok) throw new Error('Cannot load popup');
+ const html=await response.text();
+ const base=new URL('../../popup/',location.href).href;
+ const mock='<script>window.chrome={storage:{local:{get:async()=>({settings:{enabled:true,size:24}}),set:async()=>{}}}};<\/script>';
+ document.querySelector('#popup').srcdoc=html.replace('<head>','<head><base href="'+base+'">'+mock);
+}
+loadPopup();
+</script></html>

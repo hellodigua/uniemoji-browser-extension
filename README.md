@@ -64,6 +64,8 @@
 
 本扩展是 [UniEmoji](https://github.com/hellodigua/UniEmoji) 的浏览器实现。欢迎提交问题和改进，开发与测试方式见 [开发指南](docs/DEVELOPMENT.md)。
 
+官网源文件位于 `site/`，本地预览与 GitHub Pages 部署方式见 [官网维护说明](site/README.md)。
+
 ## 许可与素材
 
 原创代码采用 MIT。内置表情图片不属于 MIT 授权范围，来源与使用边界见 [素材说明](ASSETS.md)。

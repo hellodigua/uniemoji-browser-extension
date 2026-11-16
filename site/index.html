@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="UniEmoji 浏览器扩展，让 AI 回复中的 emoji 变成生动的鲸鱼表情。支持 DeepSeek、Gemini、ChatGPT、豆包、千问和 Kimi，仅在本地处理。">
+  <title>UniEmoji — 让 AI 的回复更有表情</title>
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="nav wrap"><a class="brand" href="./">UniEmoji<span>Same meanings, any face.</span></a><a href="https://github.com/hellodigua/uniemoji-browser-extension">GitHub ↗</a></header>
+  <main id="main" class="wrap">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">UNIEMOJI · 浏览器扩展</p>
+        <h1>同样的意思，<br>多一点<span>表情。</span></h1>
+        <p class="intro">让 AI 回复中的 emoji，变成生动的鲸鱼表情。<br>不用改变聊天习惯，让每一句回复更有温度。</p>
+        <a class="button" href="#install">开始使用 <span aria-hidden="true">↗</span></a>
+        <p class="note">适用于桌面 Chrome / Edge · 目前通过本地加载安装</p>
+      </div>
+      <div class="demo" aria-label="替换效果示意">
+        <div class="demo-label">一点小变化</div>
+        <div class="before"><span>原来的回复</span><p>早上好 😊</p></div>
+        <div class="after"><span>遇见 UniEmoji</span><p>早上好 <img src="assets/ds_01.png" width="48" height="48" alt="开心的鲸鱼"></p></div>
+        <p class="demo-note">Same meanings, any face.</p>
+      </div>
+    </section>
+    <section class="platforms" aria-labelledby="platform-title"><h2 id="platform-title">在你熟悉的 AI 网页里</h2><ul><li>DeepSeek</li><li>Gemini</li><li>ChatGPT</li><li>豆包</li><li>千问</li><li>Kimi</li></ul></section>
+    <section class="features" aria-label="功能介绍">
+      <div><span class="number">01</span><h2>表情，自然出现</h2><p>内置 40 款鲸鱼表情，自动替换 AI 回复中已收录的 emoji。未收录的表情保持原样。</p></div>
+      <div><span class="number">02</span><h2>大小，由你决定</h2><p>在工具栏中随时开关，调整 24–64px 的表情尺寸。默认 24px，融入每一句话。</p></div>
+      <div><span class="number">03</span><h2>聊天，留在本地</h2><p>在浏览器内识别并显示表情，不上传聊天内容，不修改提示词，也不额外调用 AI。</p></div>
+    </section>
+    <section id="install" class="install" aria-labelledby="install-title">
+      <div><p class="eyebrow">准备好了吗？</p><h2 id="install-title">给下一句回复，<br>换个表情。</h2><p>尚未上架 Chrome 应用商店，<br>现在可以通过本地加载体验。</p><a href="https://github.com/hellodigua/uniemoji-browser-extension/archive/refs/heads/main.zip" class="button">下载扩展 ZIP <span aria-hidden="true">↓</span></a></div>
+      <ol><li><strong>下载并解压</strong><p>保留解压后的文件夹，浏览器需要从中加载扩展。</p></li><li><strong>加载扩展</strong><p>打开 <code>chrome://extensions</code>（Edge 使用 <code>edge://extensions</code>），开启「开发者模式」，点击「加载已解压的扩展程序」，选择包含 <code>manifest.json</code> 的文件夹。</p></li><li><strong>刷新聊天网页</strong><p>打开支持的网站，刷新已打开的页面。AI 回复出现已收录的 emoji 时，就会显示为鲸鱼表情。扩展不会主动让 AI 添加 emoji。</p></li></ol>
+    </section>
+  </main>
+  <footer class="wrap"><span>UniEmoji · Same meanings, any face.</span><nav aria-label="页脚"><a href="privacy.html">隐私政策</a><a href="https://github.com/hellodigua/uniemoji-browser-extension/issues">帮助与反馈 ↗</a></nav></footer>
+</body>
+</html>

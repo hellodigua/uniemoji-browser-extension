@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "UniEmoji",
-  "version": "0.1.0",
-  "description": "让 DeepSeek、Gemini、ChatGPT、豆包、千问和 Kimi 的 emoji 拥有不同的面孔。",
+  "version": "0.1.1",
+  "description": "将已适配的 AI 聊天网页回复中的 emoji 显示为鲸鱼表情，支持尺寸调整，仅在本地处理。",
   "permissions": ["storage"],
   "icons": {
     "16": "assets/icons/icon-16.png",

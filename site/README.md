@@ -1,26 +1,16 @@
-# 官网维护
+# 旧官网地址兼容
 
-纯静态页面，无运行时依赖。首页和隐私政策共享样式，构建时复用扩展内的图片。
+官网源码已迁至 [UniEmoji 主项目](https://github.com/hellodigua/UniEmoji)，本目录仅保留已有链接的访问入口。
 
-本地预览：
+| 旧地址 | 行为 |
+| --- | --- |
+| `https://hellodigua.github.io/uniemoji-browser-extension/` | 自动跳转至 `https://hellodigua.github.io/UniEmoji/browser-extension.html`，并提供手动链接 |
+| `https://hellodigua.github.io/uniemoji-browser-extension/privacy.html` | 保留完整原隐私政策，标明新政策地址 |
 
-```sh
-npm run build:site
-python3 -m http.server 4173 --directory dist-site
-```
+新官网首页为 https://hellodigua.github.io/UniEmoji/ ，隐私政策为 https://hellodigua.github.io/UniEmoji/privacy.html 。
 
-打开 http://localhost:4173 。修改后重新运行构建命令。
+请先发布主项目的新页面，再部署本仓库兼容页，最后更新商店后台链接。完整迁移顺序见 [主项目官网维护说明](https://github.com/hellodigua/UniEmoji/blob/main/docs/WEBSITE.md)。
 
-## GitHub Pages
+`npm run build:site` 仅构建这两个兼容页面到 `dist-site/`，供现有 Pages 工作流使用。不要停用此仓库的 Pages，否则商店及历史链接会失效。
 
-首次部署前，在仓库 Settings → Pages → Build and deployment 中选择 **GitHub Actions**。
-合入 main 后，官网相关变更会自动部署；也可手动运行 Deploy website 工作流。
-
-默认地址（部署成功后生效）：
-
-- 官网：https://hellodigua.github.io/uniemoji-browser-extension/
-- 隐私政策：https://hellodigua.github.io/uniemoji-browser-extension/privacy.html
-
-上架 Chrome 应用商店时，分别填入官网和隐私政策地址。商店上架后，把首页的本地安装入口改为真实商店链接；尚未上架前不使用占位商店链接。
-
-今后绑定自定义域名时，继续使用这个站点，并更新商店后台链接。隐私政策须随扩展的数据处理行为同步更新。
+官网日常开发请在 UniEmoji 主项目运行 `npm run dev`；不再在本仓库维护独立的产品介绍页或官网样式。

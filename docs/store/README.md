@@ -10,9 +10,9 @@
 | 简短介绍 | 将已适配的 AI 聊天网页回复中的 emoji 显示为鲸鱼表情，支持尺寸调整，仅在本地处理。（来自 manifest） |
 | 主要语言 | 中文（简体） |
 | 类别建议 | 娱乐（以后台当前提供的分类为准） |
-| 官网 | https://hellodigua.github.io/uniemoji-browser-extension/ |
+| 官网 | https://hellodigua.github.io/UniEmoji/ |
 | 支持网址 | https://github.com/hellodigua/uniemoji-browser-extension/issues |
-| 隐私政策 | https://hellodigua.github.io/uniemoji-browser-extension/privacy.html |
+| 隐私政策 | https://hellodigua.github.io/UniEmoji/privacy.html |
 | 费用 | 扩展免费，无扩展内购买；第三方 AI 平台自身的费用不在此范围 |
 
 ## 详细介绍（可直接复制）
@@ -40,9 +40,9 @@ Same meanings, any face.
 
 仅适用于已适配的桌面聊天网页，不适用于独立桌面 App 或手机 App。支持范围请在官网查看。本扩展为独立项目，与聊天平台不存在官方隶属或背书关系。
 
-官网：https://hellodigua.github.io/uniemoji-browser-extension/
+官网：https://hellodigua.github.io/UniEmoji/
 问题反馈：https://github.com/hellodigua/uniemoji-browser-extension/issues
-隐私政策：https://hellodigua.github.io/uniemoji-browser-extension/privacy.html
+隐私政策：https://hellodigua.github.io/UniEmoji/privacy.html
 ```
 
 ## 隐私实践（后台填写）

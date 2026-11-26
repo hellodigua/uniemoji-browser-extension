@@ -2,6 +2,8 @@
 
 **Same meanings, any face.**
 
+[官网](https://hellodigua.github.io/UniEmoji/) · [安装与使用](https://hellodigua.github.io/UniEmoji/browser-extension.html) · [隐私政策](https://hellodigua.github.io/UniEmoji/privacy.html)
+
 让 AI 回复中的 emoji 变成生动的表情包。UniEmoji 浏览器扩展会把支持的 emoji 显示为鲸鱼表情，让同一种表达拥有不同的面孔。
 
 早上好 😊 → 早上好 <img src="assets/whale/ds_01.png" width="32" height="32" alt="开心的鲸鱼表情" align="absmiddle">
@@ -29,7 +31,7 @@
 
 ## 安装
 
-目前通过本地加载安装，尚未上架扩展商店。
+可从 [Chrome 应用商店](https://chromewebstore.google.com/detail/uniemoji/kfdjipdnbnfgdpmlfnogfgcckfafigdb) 安装。需要本地加载时，按以下步骤操作：
 
 1. 在本仓库页面点击 **Code → Download ZIP**，下载后解压。
 2. 打开浏览器的扩展管理页：Chrome 为 `chrome://extensions`，Edge 为 `edge://extensions`。
@@ -64,7 +66,7 @@
 
 本扩展是 [UniEmoji](https://github.com/hellodigua/UniEmoji) 的浏览器实现。欢迎提交问题和改进，开发与测试方式见 [开发指南](docs/DEVELOPMENT.md)。
 
-官网源文件位于 `site/`，本地预览与 GitHub Pages 部署方式见 [官网维护说明](site/README.md)。
+官网由 [UniEmoji 主项目](https://github.com/hellodigua/UniEmoji) 维护；本仓库的 `site/` 仅保留旧地址兼容页面，说明见 [旧官网地址兼容](site/README.md)。
 
 ## 许可与素材
 

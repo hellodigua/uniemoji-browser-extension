@@ -1,8 +1,8 @@
-name: Deploy website
+name: Deploy legacy website pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'scripts/build-site.mjs', 'assets/whale/ds_01.png', '.github/workflows/pages.yml']
+    paths: ['site/**', 'scripts/build-site.mjs', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
